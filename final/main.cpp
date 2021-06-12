@@ -17,6 +17,7 @@ DigitalOut led1(LED1);
 DigitalInOut pin11(D11);
 
 BBCar car(pin5, pin6, servo_ticker);
+parallax_ping  ping1(pin11);
 
 void RPC_Parking(Arguments *in, Reply *out);
 RPCFunction rpcRPC_Parking(&RPC_Parking, "RPC_Parking");
@@ -30,86 +31,105 @@ void encoder_control() {
 }
 
 void RPC_Parking(Arguments *in, Reply *out)   {
-    double d1 = in->getArg<double>();
-    double d2 = in->getArg<double>();
-    char face = in->getArg<char>();
+    // double d1 = in->getArg<double>();
+    // double d2 = in->getArg<double>();
+    // char face = in->getArg<char>();
 
-    if (face=='S') {
-        // go back d2 cm
-        encoder_ticker.attach(&encoder_control, 10ms);
-        steps = 0;
-        last = 0;
-        car.goStraight(-50);
+    car.turn(50, -0.3);
+    ThisThread::sleep_for(2500ms);
+    car.stop();
 
-        printf("d1 = %f\n", d1);
-        printf("d2 = %f\n", d2);
-        printf("face = %c\n", face);
+    // if (face=='S') {
+    //     // go back d2 cm
+    //     encoder_ticker.attach(&encoder_control, 10ms);
+    //     steps = 0;
+    //     last = 0;
+    //     car.goStraight(-50);
 
-        while(steps*6.5*3.14/32 < (d2-5+7)) {
-            printf("encoder = %d\r\n", steps);
-            ThisThread::sleep_for(100ms);
-        }
-        car.stop();
-    } else {
-        // go back d1 cm
-        encoder_ticker.attach(&encoder_control, 10ms);
-        steps = 0;
-        last = 0;
-        car.goStraight(-50);
+    //     printf("d1 = %f\n", d1);
+    //     printf("d2 = %f\n", d2);
+    //     printf("face = %c\n", face);
 
-        printf("d1 = %f\n", d1);
-        printf("d2 = %f\n", d2);
-        printf("face = %c\n", face);
+    //     while(steps*6.5*3.14/32 < (d2-5+7)) {
+    //         printf("encoder = %d\r\n", steps);
+    //         ThisThread::sleep_for(100ms);
+    //     }
+    //     car.stop();
+    // } else {
+    //     // go back d1 cm
+    //     encoder_ticker.attach(&encoder_control, 10ms);
+    //     steps = 0;
+    //     last = 0;
+    //     car.goStraight(-50);
 
-        while(steps*6.5*3.14/32 < (d1-5+17)) {
-            printf("encoder = %d\r\n", steps);
-            ThisThread::sleep_for(100ms);
-        }
-        car.stop();
-        ThisThread::sleep_for(3000ms);
+    //     printf("d1 = %f\n", d1);
+    //     printf("d2 = %f\n", d2);
+    //     printf("face = %c\n", face);
+
+    //     while(steps*6.5*3.14/32 < (d1-5+17)) {
+    //         printf("encoder = %d\r\n", steps);
+    //         ThisThread::sleep_for(100ms);
+    //     }
+    //     car.stop();
+    //     ThisThread::sleep_for(3000ms);
 
         
-        // turning 
-        if (face=='U') {
-            car.turn(50, 0.3);
-            ThisThread::sleep_for(2500ms);
-            car.stop();
-        } else if (face=='D') {
-            car.turn(50, -0.3);
-            ThisThread::sleep_for(2500ms);
-            car.stop();
-        }
-        ThisThread::sleep_for(3000ms);
+    //     // turning 
+    //     if (face=='U') {
+    //         car.turn(50, 0.3);
+    //         ThisThread::sleep_for(2500ms);
+    //         car.stop();
+    //     } else if (face=='D') {
+    //         car.turn(50, -0.3);
+    //         ThisThread::sleep_for(2800ms);
+    //         car.stop();
+    //     }
+    //     ThisThread::sleep_for(3000ms);
         
-        // go back d2 cm
-        encoder_ticker.attach(&encoder_control, 10ms);
-        steps = 0;
-        last = 0;
-        car.goStraight(-50);
+    //     // go back d2 cm
+    //     encoder_ticker.attach(&encoder_control, 10ms);
+    //     steps = 0;
+    //     last = 0;
+    //     car.goStraight(-50);
 
-        printf("d1 = %f\n", d1);
-        printf("d2 = %f\n", d2);
-        printf("face = %c\n", face);
+    //     printf("d1 = %f\n", d1);
+    //     printf("d2 = %f\n", d2);
+    //     printf("face = %c\n", face);
 
-        while(steps*6.5*3.14/32 < (d2-5+15.5+11)) {
-            printf("encoder = %d\r\n", steps);
-            ThisThread::sleep_for(100ms);
-        }
-        car.stop();
+    //     while(steps*6.5*3.14/32 < (d2-5+15.5+11)) {
+    //         printf("encoder = %d\r\n", steps);
+    //         ThisThread::sleep_for(100ms);
+    //     }
+    //     car.stop();
 
-    }
+    // }
+
+
+
+    //car.goCertain_Distance(d1);
+    
+    //car.turn(speed,turn);
     return;
 }
+
 
 void RPC_Line_Following(Arguments *in, Reply *out) {
     while(1){
         printf("while loop\r\n");
-        printf("uart = %d\r\n", uart.readable());
+        //printf("uart = %d\r\n", uart.readable());
+
+        printf("%lf cm \r\n",(float)ping1);
+        if((float)ping1>30) led1 = 1;
+        else {
+            led1 = 0;
+            car.stop();
+            break;
+        }
+
         if(uart.readable()){
             char recv[1];
             uart.read(recv, sizeof(recv));  // &recv[0]
             //pc.write(recv, sizeof(recv));
-            //output = atoi(recv);
             printf("char= %c\r\n", recv[0]);
 
             if (recv[0] == '1') {   // see line, go straight
@@ -137,7 +157,7 @@ void RPC_Line_Following(Arguments *in, Reply *out) {
 int main() {
     //pc.set_baud(9600);
     uart.set_baud(9600);
-    parallax_ping  ping1(pin11);
+    //parallax_ping  ping1(pin11);
 
     char buf[256], outbuf[256];
     FILE *devin = fdopen(&xbee, "r");
