@@ -32,12 +32,16 @@ void encoder_control() {
    last = value;
 }
 
+
+
 void RPC_Parking(Arguments *in, Reply *out)   {
     car.turn(50, -0.3);
     ThisThread::sleep_for(2500ms);
     car.stop();
     return;
 }
+
+
 
 void RPC_Line_Following(Arguments *in, Reply *out) {
     // char ch[1] = {'L'};
@@ -77,20 +81,46 @@ void RPC_Line_Following(Arguments *in, Reply *out) {
    }
 }
 
+
+
 void RPC_AprilTag(Arguments *in, Reply *out)   {
     char ch[1] = {'A'};
     uart.write(ch, sizeof(ch));
     printf("write ch = %c", ch[0]);
 
+    while(1){
+        printf("*********while loop!********\r\n");
+        printf("%lf cm \r\n",(float)ping1);
+        if((float)ping1>30) led1 = 1;
+        else {
+            led1 = 0;
+            car.stop();
+            break;
+        }
 
+        if(uart.readable()){
 
-
-
-
-
-
-
-    
+            char recv[1];
+            uart.read(recv, sizeof(recv));  // &recv[0]
+            
+            printf("char= %c\r\n", recv[0]);
+            
+            if (recv[0] == 's') {
+                car.goStraight(40);
+                ThisThread::sleep_for(1500ms);
+                car.stop();
+            } else if (recv[0] == 'r') {   // turn right
+                car.turn(40, -0.85);
+                ThisThread::sleep_for(1500ms);
+                car.stop();
+            } else if (recv[0] == 'l') {   // turn left
+                car.turn(40, 0.9);
+                ThisThread::sleep_for(1500ms);
+                car.stop();
+            } 
+            ThisThread::sleep_for(500ms);
+      }
+   }
     // car.turn(50, -0.3);
     // ThisThread::sleep_for(2500ms);
     // car.stop();
